@@ -1,0 +1,104 @@
+namespace: openblocks
+openblocks:
+  defines: runnable
+  metadata:
+    name: openblocks
+    description: >-
+      Openblocks is an application that manages, develops and deploys
+      microservices.
+    icon: https://emojiapi.dev/api/v1/robot.svg
+  containers:
+    openblocks:
+      build: .
+  services:
+    client-port:
+      container: openblocks
+      port: 3000
+      host-port: 3000
+      publish: false
+      protocol: TCP
+      description: Port for serving client-side assets.
+    node-service-port:
+      container: openblocks
+      port: 6060
+      host-port: 6060
+      publish: false
+      protocol: TCP
+      description: Port used by the Node.js service.
+    http-port:
+      container: openblocks
+      port: <- $server.port
+      host-port: <- $server.port
+      publish: false
+      protocol: TCP
+      description: HTTP port for the application's main server.
+  connections:
+    mongo-database:
+      target: openblocks/mongodb
+      service: mongodb
+    redis:
+      target: openblocks/redis
+      service: redis-svc
+  variables:
+    server.port:
+      env: server.port
+      type: int
+      description: Port that the main server is served on.
+      value: 8080
+    spring.data.mongodb.uri:
+      env: spring.data.mongodb.uri
+      type: string
+      description: Connection string for MongoDB.
+      value: <- connection-hostname("mongo-database")
+    spring.redis.url:
+      env: spring.redis.url
+      type: string
+      description: Connection string for Redis.
+      value: <- connection-hostname("redis")
+    common.block-hound-enable:
+      env: common.block-hound-enable
+      type: bool
+      description: Enable/disable block hound.
+      value: false
+    common.cookie-name:
+      env: common.cookie-name
+      type: string
+      description: Default name for cookies.
+      value: LOCAL_OPENBLOCKS_TOKEN
+    common.product:
+      env: common.product
+      type: string
+      description: Product name.
+      value: openblocks
+    common.domain.default-value:
+      env: common.domain.default-value
+      type: string
+      description: Default domain value.
+      value: skipCheck
+    common.encrypt.password:
+      env: common.encrypt.password
+      type: string
+      description: Password for encryption.
+      value: '!!!SETME-USE-SECRETS!!!'
+    common.encrypt.salt:
+      env: common.encrypt.salt
+      type: string
+      description: Salt for encryption.
+      value: openblocks
+    common.cloud:
+      env: common.cloud
+      type: bool
+      description: Configuration for cloud.
+      value: true
+mongodb:
+  defines: runnable
+  inherits: mongodb/mongodb
+redis:
+  defines: runnable
+  inherits: redis/redis
+stack:
+  defines: group
+  members:
+    - openblocks/openblocks
+    - openblocks/mongodb
+    - openblocks/redis
